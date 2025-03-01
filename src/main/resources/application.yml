@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: iot-sensor
+  config:
+    import: optional:file:./properties_secrets.yml
+  profiles:
+    active: local  # 기본 활성화 프로파일
+# 공통 설정
+server:
+  port: 8080
+logging:
+  level:
+    root: INFO
+# --- local 프로파일 설정 ---
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+datasource:
+  url: ${DB_URL}
+  username: ${DB_USERNAME}
+  password: ${DB_PASSWORD}
+  driver-class-name: ${DB_DRIVER}
+# --- prod 프로파일 설정 ---
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+datasource:
+  url: ${DB_URL}
+  username: ${DB_USERNAME}
+  password: ${DB_PASSWORD}
+  driver-class-name: ${DB_DRIVER}
+
+logging:
+  level:
+    root: debug
