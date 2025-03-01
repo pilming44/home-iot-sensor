@@ -2,7 +2,7 @@ spring:
   application:
     name: iot-sensor
   config:
-    import: optional:file:./properties_secrets.yml
+    import: optional:classpath:application_secrets.yml
   profiles:
     active: local  # 기본 활성화 프로파일
 # 공통 설정
@@ -17,25 +17,40 @@ spring:
   config:
     activate:
       on-profile: local
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_DRIVER}
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+logging:
+  level:
+    org.hibernate.SQL: debug
 
-datasource:
-  url: ${DB_URL}
-  username: ${DB_USERNAME}
-  password: ${DB_PASSWORD}
-  driver-class-name: ${DB_DRIVER}
 # --- prod 프로파일 설정 ---
 ---
 spring:
   config:
     activate:
       on-profile: prod
-
-datasource:
-  url: ${DB_URL}
-  username: ${DB_USERNAME}
-  password: ${DB_PASSWORD}
-  driver-class-name: ${DB_DRIVER}
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DB_DRIVER}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
 
 logging:
   level:
+    org.hibernate.SQL: debug
     root: debug
