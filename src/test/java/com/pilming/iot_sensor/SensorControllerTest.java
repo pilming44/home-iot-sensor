@@ -3,6 +3,8 @@ package com.pilming.iot_sensor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pilming.iot_sensor.dto.SensorDataRequest;
 import com.pilming.iot_sensor.dto.SensorRegisterRequest;
+import com.pilming.iot_sensor.enums.SensorDataKey;
+import com.pilming.iot_sensor.enums.SensorType;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +40,7 @@ public class SensorControllerTest {
     void setUp() throws Exception {
         SensorRegisterRequest sensorRequest = new SensorRegisterRequest();
         sensorRequest.setSensorUid("sensor-123");
-        sensorRequest.setSensorType("temperature");
+        sensorRequest.setSensorType(SensorType.TEMPERATURE_HUMIDITY);
         sensorRequest.setName("TempSensor1");
 
         ResultActions result = mockMvc.perform(post("/api/sensors")
@@ -54,7 +56,7 @@ public class SensorControllerTest {
     void registerSensor() throws Exception {
         SensorRegisterRequest request = new SensorRegisterRequest();
         request.setSensorUid("sensor-456");
-        request.setSensorType("humidity");
+        request.setSensorType(SensorType.TEMPERATURE_HUMIDITY);
         request.setName("HumiditySensor1");
 
         mockMvc.perform(post("/api/sensors")
@@ -75,8 +77,8 @@ public class SensorControllerTest {
     @DisplayName("센서데이터 정상 등록")
     void saveSensorData() throws Exception {
         SensorDataRequest dataRequest = new SensorDataRequest();
-        dataRequest.setKey("temperature");
-        dataRequest.setValue("25.5");
+        dataRequest.setDataKey(SensorDataKey.TEMPERATURE);
+        dataRequest.setDataValue("25.5");
 
         mockMvc.perform(post("/api/sensors/" + sensorUid + "/data")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -89,8 +91,8 @@ public class SensorControllerTest {
     void getSensorData() throws Exception {
         // 데이터 추가
         SensorDataRequest dataRequest = new SensorDataRequest();
-        dataRequest.setKey("temperature");
-        dataRequest.setValue("25.5");
+        dataRequest.setDataKey(SensorDataKey.TEMPERATURE);
+        dataRequest.setDataValue("25.5");
 
         mockMvc.perform(post("/api/sensors/" + sensorUid + "/data")
                         .contentType(MediaType.APPLICATION_JSON)
