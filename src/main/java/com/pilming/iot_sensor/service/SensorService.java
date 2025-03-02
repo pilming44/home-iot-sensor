@@ -8,6 +8,7 @@ import com.pilming.iot_sensor.entity.SensorDataValue;
 import com.pilming.iot_sensor.repository.SensorDataRepository;
 import com.pilming.iot_sensor.repository.SensorDataValueRepository;
 import com.pilming.iot_sensor.repository.SensorRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class SensorService {
 
     private final SensorRepository sensorRepository;
