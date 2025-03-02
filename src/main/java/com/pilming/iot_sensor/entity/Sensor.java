@@ -1,5 +1,6 @@
 package com.pilming.iot_sensor.entity;
 
+import com.pilming.iot_sensor.enums.SensorType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,8 +24,9 @@ public class Sensor {
     @Column(unique = true, nullable = false)
     private String sensorUid;  // 센서의 고유 ID (UUID)
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String sensorType;  //센서 종류
+    private SensorType sensorType;  //센서 종류
 
     @Column
     private String name;

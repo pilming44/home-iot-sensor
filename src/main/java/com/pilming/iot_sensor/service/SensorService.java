@@ -48,8 +48,8 @@ public class SensorService {
 
         SensorDataValue dataValue = SensorDataValue.builder()
                 .sensorData(sensorData)
-                .dataKey(request.getKey())
-                .dataValue(request.getValue())
+                .dataKey(request.getDataKey())
+                .dataValue(request.getDataValue())
                 .build();
         sensorDataValueRepository.save(dataValue);
 
