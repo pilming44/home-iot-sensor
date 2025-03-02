@@ -23,8 +23,8 @@ public class SensorDataValue {
     private SensorData sensorData;
 
     @Column(nullable = false)
-    private String key;  //센서데이터 키
+    private String dataKey;  //센서데이터 키
 
     @Column(nullable = false)
-    private String value;  // 센서데이터 값
+    private String dataValue;  // 센서데이터 값
 }
