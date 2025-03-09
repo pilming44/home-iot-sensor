@@ -32,6 +32,12 @@ public class Sensor {
     private String name;
 
     @Column(nullable = false)
+    private int transmissionInterval; // 데이터 전송 주기 (초 단위)
+
+    @Column
+    private LocalDateTime lastTransmissionTime; // 마지막 데이터 전송 시간
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @Column
