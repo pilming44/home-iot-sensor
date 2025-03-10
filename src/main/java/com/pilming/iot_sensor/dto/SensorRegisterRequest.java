@@ -15,4 +15,6 @@ public class SensorRegisterRequest {
     private SensorType sensorType;
 
     private String name;
+
+    private int transmissionInterval; // 데이터 전송 주기 (초 단위)
 }
