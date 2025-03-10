@@ -11,6 +11,10 @@ server:
 logging:
   level:
     root: INFO
+security:
+  rsa:
+    public-key: ${PUBLIC_KEY}
+    private-key: ${PRIVATE_KEY}
 # --- local 프로파일 설정 ---
 ---
 spring:
