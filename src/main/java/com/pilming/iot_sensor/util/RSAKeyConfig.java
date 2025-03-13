@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class RSAKeyConfig {
 
-    @Value("${security.rsa.public-key}")
-    private String publicKey;
-
-    @Value("${security.rsa.private-key}")
-    private String privateKey;
+//    @Value("${security.rsa.public-key}")
+//    private String publicKey;
+//
+//    @Value("${security.rsa.private-key}")
+//    private String privateKey;
 
 }
