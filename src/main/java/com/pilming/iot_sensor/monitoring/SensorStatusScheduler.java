@@ -4,6 +4,7 @@ import com.pilming.iot_sensor.entity.Sensor;
 import com.pilming.iot_sensor.entity.SensorStatus;
 import com.pilming.iot_sensor.repository.SensorRepository;
 import com.pilming.iot_sensor.repository.SensorStatusRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class SensorStatusScheduler {
 
     private final SensorRepository sensorRepository;
@@ -27,18 +29,16 @@ public class SensorStatusScheduler {
 
             String newStatus = determineStatus(sensor);
 
-            SensorStatus updatedStatus;
             if (existingStatus == null) {
-                updatedStatus = SensorStatus.builder()
+                SensorStatus updatedStatus = SensorStatus.builder()
                         .sensor(sensor)
                         .sensorStatus(newStatus)
                         .lastUpdate(LocalDateTime.now())
                         .build();
+                sensorStatusRepository.save(updatedStatus);
             } else {
-                updatedStatus = existingStatus.updateStatus(newStatus);
+                existingStatus.updateStatus(newStatus);
             }
-
-            sensorStatusRepository.save(updatedStatus);
         }
     }
 

@@ -6,11 +6,13 @@ import com.pilming.iot_sensor.dto.SensorRegisterRequest;
 import com.pilming.iot_sensor.entity.Sensor;
 import com.pilming.iot_sensor.entity.SensorData;
 import com.pilming.iot_sensor.entity.SensorDataValue;
+import com.pilming.iot_sensor.entity.SensorStatus;
 import com.pilming.iot_sensor.exception.DuplicateSensorException;
 import com.pilming.iot_sensor.exception.SensorNotFoundException;
 import com.pilming.iot_sensor.repository.SensorDataRepository;
 import com.pilming.iot_sensor.repository.SensorDataValueRepository;
 import com.pilming.iot_sensor.repository.SensorRepository;
+import com.pilming.iot_sensor.repository.SensorStatusRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class SensorService {
     private final SensorRepository sensorRepository;
     private final SensorDataRepository sensorDataRepository;
     private final SensorDataValueRepository sensorDataValueRepository;
+    private final SensorStatusRepository sensorStatusRepository;
 
     public Sensor registerSensor(SensorRegisterRequest request) {
         // 이미 존재하는 센서인지 확인
@@ -41,11 +44,18 @@ public class SensorService {
                 .sensorType(request.getSensorType())
                 .name(request.getName())
                 .transmissionInterval(request.getTransmissionInterval())
-                .lastTransmissionTime(now)
                 .createdAt(now)
                 .build();
+        sensorRepository.save(sensor);
 
-        return sensorRepository.save(sensor);
+        SensorStatus sensorStatus = SensorStatus.builder()
+                .sensor(sensor)
+                .sensorStatus("OFFLINE")
+                .lastUpdate(now)
+                .build();
+        sensorStatusRepository.save(sensorStatus);
+
+        return sensor;
     }
 
     public List<Sensor> getAllSensors() {

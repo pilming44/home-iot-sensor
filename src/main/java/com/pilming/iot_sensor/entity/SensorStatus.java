@@ -30,11 +30,7 @@ public class SensorStatus {
     @Column(nullable = false)
     private LocalDateTime lastUpdate;
 
-    public SensorStatus updateStatus(String newStatus) {
-        return SensorStatus.builder()
-                .sensor(this.sensor)
-                .sensorStatus(newStatus)
-                .lastUpdate(LocalDateTime.now())
-                .build();
+    public void updateStatus(String newStatus) {
+        this.sensorStatus = newStatus;
     }
 }
