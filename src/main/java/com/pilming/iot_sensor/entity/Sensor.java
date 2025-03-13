@@ -42,4 +42,10 @@ public class Sensor {
 
     @Column
     private LocalDateTime updatedAt;
+
+    public void markAsDataTransmitted(LocalDateTime timestamp) {
+        this.lastTransmissionTime = timestamp;
+        this.updatedAt = timestamp;
+    }
+
 }

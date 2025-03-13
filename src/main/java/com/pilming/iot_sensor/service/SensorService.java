@@ -34,12 +34,17 @@ public class SensorService {
             throw new DuplicateSensorException("이미 등록된 센서입니다: " + request.getSensorUid());
         }
 
+        LocalDateTime now = LocalDateTime.now();
+
         Sensor sensor = Sensor.builder()
                 .sensorUid(request.getSensorUid())
                 .sensorType(request.getSensorType())
                 .name(request.getName())
-                .createdAt(LocalDateTime.now())
+                .transmissionInterval(request.getTransmissionInterval())
+                .lastTransmissionTime(now)
+                .createdAt(now)
                 .build();
+
         return sensorRepository.save(sensor);
     }
 
@@ -51,9 +56,11 @@ public class SensorService {
         Sensor sensor = sensorRepository.findBySensorUid(sensorUid)
                 .orElseThrow(() -> new SensorNotFoundException("해당 UID를 가진 센서를 찾을 수 없습니다: " + sensorUid));
 
+        LocalDateTime now = LocalDateTime.now();
+
         SensorData sensorData = SensorData.builder()
                 .sensor(sensor)
-                .timestamp(LocalDateTime.now())
+                .timestamp(now)
                 .build();
 
         SensorData savedData = sensorDataRepository.save(sensorData);
@@ -65,6 +72,10 @@ public class SensorService {
                 .build();
 
         sensorDataValueRepository.save(sensorDataValue);
+
+        //마지막 데이터 전송 시간 기록 -> 센서 상태체크용
+        sensor.markAsDataTransmitted(now);
+
         return savedData;
     }
 
