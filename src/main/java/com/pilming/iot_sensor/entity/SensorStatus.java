@@ -30,7 +30,8 @@ public class SensorStatus {
     @Column(nullable = false)
     private LocalDateTime lastUpdate;
 
-    public void updateStatus(String newStatus) {
+    public void updateStatus(String newStatus, LocalDateTime lastUpdate) {
         this.sensorStatus = newStatus;
+        this.lastUpdate = lastUpdate;
     }
 }
