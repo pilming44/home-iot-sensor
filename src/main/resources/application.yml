@@ -35,6 +35,9 @@ spring:
 logging:
   level:
     org.hibernate.SQL: debug
+    com:
+      pilming: debug
+    root: info
 
 # --- prod 프로파일 설정 ---
 ---
@@ -56,5 +59,7 @@ spring:
 
 logging:
   level:
-    org.hibernate.SQL: debug
-    root: debug
+    org.hibernate.SQL: info
+    com:
+      pilming: debug
+    root: info
