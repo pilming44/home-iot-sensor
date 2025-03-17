@@ -1,15 +1,18 @@
 package com.pilming.iot_sensor.controller;
 
 import com.pilming.iot_sensor.dto.SensorDataRequest;
+import com.pilming.iot_sensor.dto.SensorDataResponseDto;
 import com.pilming.iot_sensor.dto.SensorDataValueDto;
 import com.pilming.iot_sensor.dto.SensorRegisterRequest;
 import com.pilming.iot_sensor.entity.Sensor;
 import com.pilming.iot_sensor.entity.SensorData;
 import com.pilming.iot_sensor.service.SensorService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -39,5 +42,15 @@ public class SensorController {
     public ResponseEntity<List<SensorDataValueDto>> getSensorData(@PathVariable("sensorUid") String sensorUid) {
         List<SensorDataValueDto> dataList = sensorService.getSensorData(sensorUid);
         return ResponseEntity.ok(dataList);
+    }
+
+    @GetMapping("/api/sensors/chart-data")
+    public ResponseEntity<SensorDataResponseDto> getSensorChartData(
+            @RequestParam String sensorUid,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+
+        SensorDataResponseDto response = sensorService.getSensorChartData(sensorUid, from, to);
+        return ResponseEntity.ok(response);
     }
 }

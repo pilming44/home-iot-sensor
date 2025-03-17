@@ -1,12 +1,14 @@
 package com.pilming.iot_sensor.service;
 
 import com.pilming.iot_sensor.dto.SensorDataRequest;
+import com.pilming.iot_sensor.dto.SensorDataResponseDto;
 import com.pilming.iot_sensor.dto.SensorDataValueDto;
 import com.pilming.iot_sensor.dto.SensorRegisterRequest;
 import com.pilming.iot_sensor.entity.Sensor;
 import com.pilming.iot_sensor.entity.SensorData;
 import com.pilming.iot_sensor.entity.SensorDataValue;
 import com.pilming.iot_sensor.entity.SensorStatus;
+import com.pilming.iot_sensor.enums.SensorDataKey;
 import com.pilming.iot_sensor.exception.DuplicateSensorException;
 import com.pilming.iot_sensor.exception.SensorNotFoundException;
 import com.pilming.iot_sensor.repository.SensorDataRepository;
@@ -17,8 +19,12 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -98,5 +104,53 @@ public class SensorService {
         return sensorDataValues.stream()
                 .map(data -> new SensorDataValueDto(data.getDataKey().name(), data.getDataValue()))
                 .collect(Collectors.toList());
+    }
+
+    public SensorDataResponseDto getSensorChartData(String sensorUid, LocalDate from, LocalDate to) {
+        Sensor sensor = sensorRepository.findBySensorUid(sensorUid)
+                .orElseThrow(() -> new SensorNotFoundException("센서를 찾을 수 없습니다: " + sensorUid));
+
+        List<SensorData> dataList = sensorDataRepository.findBySensorAndTimestampBetween(
+                sensor, from.atStartOfDay(), to.plusDays(1).atStartOfDay());
+
+        List<String> timestamps = new ArrayList<>();
+        List<Double> temperatureData = new ArrayList<>();
+        List<Double> humidityData = new ArrayList<>();
+
+        for (SensorData data : dataList) {
+            timestamps.add(data.getTimestamp().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")));
+
+            // SensorDataValue를 통해 온/습도 값 추출
+            List<SensorDataValue> values = sensorDataValueRepository.findBySensorData(data);
+
+            Optional<Double> tempVal = values.stream()
+                    .filter(v -> v.getDataKey() == SensorDataKey.TEMPERATURE)
+                    .map(v -> Double.valueOf(v.getDataValue()))
+                    .findFirst();
+
+            Optional<Double> humVal = values.stream()
+                    .filter(v -> v.getDataKey() == SensorDataKey.HUMIDITY)
+                    .map(v -> Double.valueOf(v.getDataValue()))
+                    .findFirst();
+
+            temperatureData.add(tempVal.orElse(null));
+            humidityData.add(humVal.orElse(null));
+        }
+
+        return SensorDataResponseDto.builder()
+                .timestamps(timestamps)
+                .datasets(List.of(
+                        SensorDataResponseDto.DatasetDto.builder()
+                                .label("온도 (°C)")
+                                .data(temperatureData)
+                                .borderColor("rgba(75,192,192,1)")
+                                .build(),
+                        SensorDataResponseDto.DatasetDto.builder()
+                                .label("습도 (%)")
+                                .data(humidityData)
+                                .borderColor("rgba(153,102,255,1)")
+                                .build()
+                ))
+                .build();
     }
 }
