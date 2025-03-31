@@ -11,10 +11,16 @@ server:
 logging:
   level:
     root: INFO
-security:
-  rsa:
-    public-key: ${PUBLIC_KEY}
-    private-key: ${PRIVATE_KEY}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    metrics:
+      access: read_only
+    prometheus:
+      access: read_only
 # --- local 프로파일 설정 ---
 ---
 spring:
