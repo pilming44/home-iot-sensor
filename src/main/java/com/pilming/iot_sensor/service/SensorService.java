@@ -107,12 +107,19 @@ public class SensorService {
     }
 
     public SensorDataResponseDto getSensorChartData(String sensorUid, LocalDate from, LocalDate to) {
-        Sensor sensor = sensorRepository.findBySensorUid(sensorUid)
-                .orElseThrow(() -> new SensorNotFoundException("센서를 찾을 수 없습니다: " + sensorUid));
+        // sensorUid가 있을 경우 해당 센서를 조회하고, 없으면 전체 센서를 대상으로 조회
+        Sensor sensor = null;
+        if (sensorUid != null && !sensorUid.isEmpty()) {
+            sensor = sensorRepository.findBySensorUid(sensorUid)
+                    .orElseThrow(() -> new SensorNotFoundException("센서를 찾을 수 없습니다: " + sensorUid));
+        }
 
-        List<SensorData> dataList = sensorDataRepository.findBySensorAndTimestampBetween(
-                sensor, from.atStartOfDay(), to.plusDays(1).atStartOfDay());
+        LocalDateTime fromDateTime = (from != null) ? from.atStartOfDay() : null;
+        LocalDateTime toDateTime = (to != null) ? to.plusDays(1).atStartOfDay() : null;
 
+        List<SensorData> dataList = sensorDataRepository.findSensorData(sensor, fromDateTime, toDateTime);
+
+        //차트데이터 구성
         List<String> timestamps = new ArrayList<>();
         List<Double> temperatureData = new ArrayList<>();
         List<Double> humidityData = new ArrayList<>();
@@ -120,7 +127,7 @@ public class SensorService {
         for (SensorData data : dataList) {
             timestamps.add(data.getTimestamp().format(DateTimeFormatter.ofPattern("MM-dd HH:mm")));
 
-            // SensorDataValue를 통해 온/습도 값 추출
+            // 센서 데이터 값 온도와 습도 데이터를 추출
             List<SensorDataValue> values = sensorDataValueRepository.findBySensorData(data);
 
             Optional<Double> tempVal = values.stream()
@@ -153,4 +160,5 @@ public class SensorService {
                 ))
                 .build();
     }
+
 }

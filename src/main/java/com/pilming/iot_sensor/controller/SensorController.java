@@ -54,15 +54,20 @@ public class SensorController {
 
         try {
             SensorDataResponseDto response = sensorService.getSensorChartData(sensorUid, from, to);
+            if (response.getDatasets().isEmpty()) {
+                return ResponseEntity.ok(getEmptySensorDataResponse());
+            }
             return ResponseEntity.ok(response);
         } catch (SensorNotFoundException e) {
             // 빈 차트용 데이터 반환
-            return ResponseEntity.ok(
-                    SensorDataResponseDto.builder()
-                            .timestamps(Collections.emptyList())
-                            .datasets(Collections.emptyList())
-                            .build()
-            );
+            return ResponseEntity.ok(getEmptySensorDataResponse());
         }
+    }
+
+    private SensorDataResponseDto getEmptySensorDataResponse() {
+        return SensorDataResponseDto.builder()
+                .timestamps(Collections.emptyList())
+                .datasets(Collections.emptyList())
+                .build();
     }
 }
