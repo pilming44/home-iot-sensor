@@ -8,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "sensors")
@@ -42,6 +44,9 @@ public class Sensor {
 
     @Column
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "sensor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<SensorData> sensorData = new ArrayList<>();
 
     public void markAsDataTransmitted(LocalDateTime timestamp) {
         this.lastTransmissionTime = timestamp;

@@ -44,8 +44,6 @@ public class SensorControllerTest {
     @Autowired
     private SensorRepository sensorRepository;
 
-//    @Autowired
-//    private RSAKeyConfig rsaKeyConfig; // RSA 키 설정 주입
     @Autowired
     private SensorStatusScheduler sensorStatusScheduler;
 

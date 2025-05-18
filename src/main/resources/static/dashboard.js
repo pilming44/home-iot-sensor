@@ -10,13 +10,15 @@ async function initializeChart() {
     const ctx = document.getElementById('sensorChart').getContext('2d');
     sensorChart = new Chart(ctx, {
         type: 'line',
-        data: {
-            labels: [],
-            datasets: []
-        },
+        data: {labels: [], datasets: []},
         options: {
             responsive: true,
-            maintainAspectRatio: false
+            // 이건 dataset 단위에만 있어도 되지만, 전체에도 꺼내 놓으시면 됩니다
+            spanGaps: true,
+            scales: {
+                x: {type: 'category', display: true, title: {display: true, text: '시간'}},
+                y: {display: true, title: {display: true, text: '값'}}
+            }
         }
     });
 }
@@ -27,22 +29,24 @@ async function updateChart() {
     const toDate = document.getElementById('toDate').value;
 
     try {
-        const response = await fetch(`/api/sensors/chart-data?sensorUid=${sensorUid}&from=${fromDate}&to=${toDate}`);
-        const data = await response.json();
+        const res = await fetch(
+            `/api/sensors/chart-data?sensorUid=${sensorUid}&from=${fromDate}&to=${toDate}`
+        );
+        const dto = await res.json();
 
-        if (!data || data.timestamps.length === 0) {
-            alert("선택한 조건에 해당하는 센서 데이터가 없습니다.");
-            sensorChart.data.labels = [];
-            sensorChart.data.datasets = [];
-            sensorChart.update();
-            return;
-        }
+        sensorChart.data.labels = dto.datasets[0].timestamps;
 
-        sensorChart.data.labels = data.timestamps;
-        sensorChart.data.datasets = data.datasets;
+        sensorChart.data.datasets = dto.datasets.map(ds => ({
+            label: ds.label,
+            data: ds.data,
+            fill: false,
+            spanGaps: true
+        }));
+
         sensorChart.update();
-    } catch (e) {
-        console.error(e);
+
+    } catch (err) {
+        console.error(err);
         alert("센서 데이터를 불러오는 중 오류가 발생했습니다.");
     }
 }

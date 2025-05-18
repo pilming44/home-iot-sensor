@@ -8,4 +8,5 @@ import lombok.Getter;
 public class SensorDataValueDto {
     private String dataKey;
     private String dataValue;
+    private String timestamp;
 }
