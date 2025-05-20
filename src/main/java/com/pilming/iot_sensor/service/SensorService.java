@@ -97,17 +97,16 @@ public class SensorService {
                 .collect(Collectors.toList());
     }
 
-    public SensorChartResponseDto getSensorChartData(String sensorUid, LocalDate from, LocalDate to) {
+    public SensorChartResponseDto getSensorChartData(String sensorUid, LocalDateTime from, LocalDateTime to) {
         // 센서 조회
         List<Sensor> sensors = loadSensors(sensorUid);
 
-        // 기간 파라미터 변환
-        LocalDateTime fromDt = toDateTime(from, true);
-        LocalDateTime toDt = toDateTime(to, false);
+        // 파라미터 유효성 및 기본값 처리
+        LocalDateTime toDt = (to != null) ? to : LocalDate.now().plusDays(1).atStartOfDay();
 
         // 센서별 데이터 조회
         List<SensorData> allData = sensors.stream()
-                .flatMap(s -> sensorDataRepository.findSensorData(s, fromDt, toDt).stream())
+                .flatMap(s -> sensorDataRepository.findSensorData(s, from, toDt).stream())
                 .toList();
 
         // 어셈블러에 위임

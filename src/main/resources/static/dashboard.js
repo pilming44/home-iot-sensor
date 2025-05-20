@@ -2,9 +2,42 @@ let sensorChart;
 
 document.addEventListener("DOMContentLoaded", () => {
     initializeChart();
+    setDefaultPeriod();    // ← 기본 기간 설정
+    updateChart();         // ← 기본 기간으로 차트 로드
     loadServerMetrics();
     setInterval(loadServerMetrics, 1000); // 10초마다 자원 현황 갱신
+    // 윈도우 리사이즈에도 차트 크기 갱신
+    window.addEventListener('resize', () => {
+        if (sensorChart) sensorChart.resize();
+    });
 });
+
+function formatLocalDateTime(d) {
+    const Y = d.getFullYear();
+    const M = String(d.getMonth() + 1).padStart(2, '0');
+    const D = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${Y}-${M}-${D}T${h}:${m}`;
+}
+
+function getDefaultFrom() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return formatLocalDateTime(d);
+}
+
+function getDefaultTo() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 1);
+    return formatLocalDateTime(d);
+}
+
+function setDefaultPeriod() {
+    document.getElementById('fromDateTime').value = getDefaultFrom();
+    document.getElementById('toDateTime').value = getDefaultTo();
+}
 
 async function initializeChart() {
     const ctx = document.getElementById('sensorChart').getContext('2d');
@@ -13,7 +46,7 @@ async function initializeChart() {
         data: {labels: [], datasets: []},
         options: {
             responsive: true,
-            // 이건 dataset 단위에만 있어도 되지만, 전체에도 꺼내 놓으시면 됩니다
+            maintainAspectRatio: false, //종횡비 고정 해제
             spanGaps: true,
             scales: {
                 x: {type: 'category', display: true, title: {display: true, text: '시간'}},
@@ -25,26 +58,40 @@ async function initializeChart() {
 
 async function updateChart() {
     const sensorUid = document.getElementById('sensorSelect').value;
-    const fromDate = document.getElementById('fromDate').value;
-    const toDate = document.getElementById('toDate').value;
+    const from = document.getElementById('fromDateTime').value;   // datetime-local
+    const to = document.getElementById('toDateTime').value;
+
+    // 1) 기간 유효성 체크
+    if (from && to && new Date(from) > new Date(to)) {
+        alert("시작 일시가 종료 일시보다 이후입니다.\n기간을 다시 설정해주세요.");
+        return;
+    }
+
+    // URLSearchParams 로 빈 값 자동 생략
+    const params = new URLSearchParams();
+    if (sensorUid) params.append('sensorUid', sensorUid);
+    if (from) params.append('from', from);
+    if (to) params.append('to', to);
 
     try {
-        const res = await fetch(
-            `/api/sensors/chart-data?sensorUid=${sensorUid}&from=${fromDate}&to=${toDate}`
-        );
+        const res = await fetch(`/api/sensors/chart-data?${params.toString()}`);
         const dto = await res.json();
 
-        sensorChart.data.labels = dto.datasets[0].timestamps;
-
-        sensorChart.data.datasets = dto.datasets.map(ds => ({
-            label: ds.label,
-            data: ds.data,
-            fill: false,
-            spanGaps: true
-        }));
+        // (데이터가 없을 땐 빈 배열이 넘어오므로 guard 처리)
+        if (dto.datasets.length === 0) {
+            sensorChart.data.labels = [];
+            sensorChart.data.datasets = [];
+        } else {
+            sensorChart.data.labels = dto.datasets[0].timestamps;
+            sensorChart.data.datasets = dto.datasets.map(ds => ({
+                label: ds.label,
+                data: ds.data,
+                fill: false,
+                spanGaps: true
+            }));
+        }
 
         sensorChart.update();
-
     } catch (err) {
         console.error(err);
         alert("센서 데이터를 불러오는 중 오류가 발생했습니다.");
@@ -52,9 +99,8 @@ async function updateChart() {
 }
 
 function resetFilters() {
+    setDefaultPeriod();
     document.getElementById('sensorSelect').value = '';
-    document.getElementById('fromDate').value = '';
-    document.getElementById('toDate').value = '';
     updateChart();
 }
 
