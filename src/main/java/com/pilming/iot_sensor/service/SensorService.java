@@ -113,6 +113,20 @@ public class SensorService {
         return assembler.toDto(sensors, allData);
     }
 
+    public SensorStatusResponseDto getSensorStatus(String sensorUid) {
+        Sensor sensor = sensorRepository.findBySensorUid(sensorUid)
+                .orElseThrow(() -> new SensorNotFoundException("해당 UID의 센서를 찾을 수 없습니다: " + sensorUid));
+
+        SensorStatus status = sensorStatusRepository.findBySensor(sensor)
+                .orElseThrow(() -> new SensorNotFoundException("센서 상태 정보를 찾을 수 없습니다: " + sensorUid));
+
+        return new SensorStatusResponseDto(
+                sensor.getSensorUid(),
+                status.getSensorStatus(),
+                status.getLastUpdate()
+        );
+    }
+
     private List<Sensor> loadSensors(String sensorUid) {
         if (sensorUid == null || sensorUid.isBlank()) {
             return sensorRepository.findAll();

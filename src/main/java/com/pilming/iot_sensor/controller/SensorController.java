@@ -64,4 +64,10 @@ public class SensorController {
             return ResponseEntity.ok(new SensorChartResponseDto(Collections.emptyList()));
         }
     }
+
+    @GetMapping("/{sensorUid}/status")
+    public ResponseEntity<SensorStatusResponseDto> getStatus(@PathVariable("sensorUid") String sensorUid) {
+        SensorStatusResponseDto dto = sensorService.getSensorStatus(sensorUid);
+        return ResponseEntity.ok(dto);
+    }
 }
