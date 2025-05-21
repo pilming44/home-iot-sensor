@@ -86,21 +86,19 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="status : ${sensorStatuses}">
+                    <tr th:each="status : ${sensorStatuses}"
+                        th:attr="data-uid=${status.sensor.sensorUid}">
                         <td th:text="${status.sensor.name}"></td>
                         <td>
-                            <span th:classappend="${status.sensorStatus == 'ONLINE'} ? 'badge bg-success' : 'badge bg-danger'"
-                                  th:text="${status.sensorStatus}">상태</span>
+                            <span class="status-badge"
+                                  th:classappend="${status.sensorStatus == 'ONLINE'} ? 'badge bg-success' : 'badge bg-danger'"
+                                  th:text="${status.sensorStatus}"></span>
                         </td>
                         <td>
-                            <!-- 마지막 변경 일시 -->
-                            <span th:text="${#temporals.format(status.lastUpdate, 'yyyy-MM-dd HH:mm:ss')}"></span>
-
-                            <!-- ONLINE 상태일 때만 펄스 표시 -->
+                          <span class="status-time"
+                                th:text="${#temporals.format(status.lastUpdate, 'yyyy-MM-dd HH:mm:ss')}"></span>
                             <span th:if="${status.sensorStatus == 'ONLINE'}"
-                                  class="pulse"
-                                  aria-label="온라인 상태 유지 중"></span>
-                            <span th:if="${status.sensorStatus != 'ONLINE'}"> 🔴</span>
+                                  class="pulse" aria-label="온라인"></span>
                         </td>
                     </tr>
                     </tbody>

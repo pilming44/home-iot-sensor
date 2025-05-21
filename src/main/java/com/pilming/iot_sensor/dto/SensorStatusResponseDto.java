@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class SensorStatusResponseDto {
     private String sensorUid;
+    private String sensorName;
     private String sensorStatus;
     private LocalDateTime lastUpdate;
 }

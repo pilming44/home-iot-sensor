@@ -122,9 +122,21 @@ public class SensorService {
 
         return new SensorStatusResponseDto(
                 sensor.getSensorUid(),
+                sensor.getName(),
                 status.getSensorStatus(),
                 status.getLastUpdate()
         );
+    }
+
+    public List<SensorStatusResponseDto> getAllSensorStatuses() {
+        return sensorStatusRepository.findAll().stream()
+                .map(st -> new SensorStatusResponseDto(
+                        st.getSensor().getSensorUid(),
+                        st.getSensor().getName(),
+                        st.getSensorStatus(),
+                        st.getLastUpdate()
+                ))
+                .collect(Collectors.toList());
     }
 
     private List<Sensor> loadSensors(String sensorUid) {

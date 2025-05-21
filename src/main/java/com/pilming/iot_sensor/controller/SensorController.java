@@ -65,6 +65,12 @@ public class SensorController {
         }
     }
 
+    @GetMapping("/statuses")
+    public ResponseEntity<List<SensorStatusResponseDto>> getAllStatuses() {
+        List<SensorStatusResponseDto> list = sensorService.getAllSensorStatuses();
+        return ResponseEntity.ok(list);
+    }
+    
     @GetMapping("/{sensorUid}/status")
     public ResponseEntity<SensorStatusResponseDto> getStatus(@PathVariable("sensorUid") String sensorUid) {
         SensorStatusResponseDto dto = sensorService.getSensorStatus(sensorUid);

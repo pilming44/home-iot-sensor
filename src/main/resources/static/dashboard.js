@@ -1,4 +1,6 @@
 let sensorChart;
+// polling 간격 (밀리초)
+const STATUS_POLL_INTERVAL = 5000;
 
 document.addEventListener("DOMContentLoaded", () => {
     initializeChart();
@@ -6,6 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
     updateChart();         // ← 기본 기간으로 차트 로드
     loadServerMetrics();
     setInterval(loadServerMetrics, 1000); // 10초마다 자원 현황 갱신
+    updateSensorStatuses();
+    setInterval(updateSensorStatuses, STATUS_POLL_INTERVAL);
     // 윈도우 리사이즈에도 차트 크기 갱신
     window.addEventListener('resize', () => {
         if (sensorChart) sensorChart.resize();
@@ -103,6 +107,69 @@ function resetFilters() {
     document.getElementById('sensorSelect').value = '';
     updateChart();
 }
+
+async function updateSensorStatuses() {
+    try {
+        const res = await fetch('/api/sensors/statuses');
+        const list = await res.json();
+        const tbody = document.querySelector('table tbody');
+
+        // 1) 들어온 UID 목록
+        const incomingUids = list.map(st => st.sensorUid);
+
+        list.forEach(st => {
+            let tr = tbody.querySelector(`tr[data-uid="${st.sensorUid}"]`);
+
+            // ● 행이 없으면 새로 만들기
+            if (!tr) {
+                tr = document.createElement('tr');
+                tr.setAttribute('data-uid', st.sensorUid);
+                tr.innerHTML = `
+          <td class="sensor-name">${st.sensorName}</td>
+          <td><span class="status-badge badge"></span></td>
+          <td>
+            <span class="status-time"></span>
+          </td>
+        `;
+                tbody.appendChild(tr);
+            }
+
+            // ● 공통: 배지/시간/펄스 업데이트
+            const badge = tr.querySelector('.status-badge');
+            badge.textContent = st.sensorStatus;
+            badge.classList.toggle('bg-success', st.sensorStatus === 'ONLINE');
+            badge.classList.toggle('bg-danger', st.sensorStatus !== 'ONLINE');
+
+            const timeEl = tr.querySelector('.status-time');
+            // ISO → 보기좋은 포맷으로
+            timeEl.textContent = st.lastUpdate.replace('T', ' ').slice(0, 19);
+
+            // 펄스 아이콘 처리
+            let pulse = tr.querySelector('.pulse');
+            if (st.sensorStatus === 'ONLINE') {
+                if (!pulse) {
+                    pulse = document.createElement('span');
+                    pulse.className = 'pulse';
+                    pulse.setAttribute('aria-label', '온라인');
+                    timeEl.insertAdjacentElement('afterend', pulse);
+                }
+            } else {
+                pulse && pulse.remove();
+            }
+        });
+
+        // 2) 기존에 있다가, 지금 응답에 없는 센서 행은 제거(Optional)
+        tbody.querySelectorAll('tr[data-uid]').forEach(tr => {
+            if (!incomingUids.includes(tr.getAttribute('data-uid'))) {
+                tr.remove();
+            }
+        });
+
+    } catch (e) {
+        console.error('상태 업데이트 실패', e);
+    }
+}
+
 
 // 서버 자원 현황 조회 (Actuator 사용)
 async function loadServerMetrics() {
