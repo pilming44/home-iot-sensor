@@ -275,34 +275,68 @@ class SensorControllerTest {
     }
 
     @Test
-    @DisplayName("센서 등록 직후 초기 상태는 OFFLINE")
-    void getSensorStatus_initialOffline() throws Exception {
-        // @BeforeEach 에서 이미 센서가 등록되어 있고, SensorStatusScheduler 에 의해 OFFLINE 으로 초기화 되어 있어야 함
-        mockMvc.perform(get(BASE_URL + "/" + TEST_UID + "/status"))
+    @DisplayName("전체 센서 상태 조회 API - 모든 센서가 OFFLINE 상태로 반환")
+    void getAllSensorStatuses_initialOffline() throws Exception {
+        // @BeforeEach 에서 TEST_UID 센서가 등록되어 있고, 기본 상태는 OFFLINE
+
+        // 두 번째 센서도 등록
+        String secondUid = "sensor-456";
+        SensorRegisterRequest req2 = new SensorRegisterRequest();
+        req2.setSensorUid(secondUid);
+        req2.setSensorType(SensorType.TEMPERATURE_HUMIDITY);
+        req2.setName("SecondSensor");
+        req2.setTransmissionInterval(30);
+        mockMvc.perform(post(BASE_URL + "/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req2)))
+                .andExpect(status().isOk());
+
+        // 상태 조회 API 호출
+        mockMvc.perform(get(BASE_URL + "/statuses"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.sensorStatus").value("OFFLINE"));
+                // 두 개의 상태 객체가 반환되어야 한다
+                .andExpect(jsonPath("$.length()").value(2))
+                // 첫 번째 센서 상태는 OFFLINE
+                .andExpect(jsonPath("$[0].sensorUid").value(TEST_UID))
+                .andExpect(jsonPath("$[0].sensorStatus").value("OFFLINE"))
+                // 두 번째 센서 상태도 OFFLINE
+                .andExpect(jsonPath("$[1].sensorUid").value(secondUid))
+                .andExpect(jsonPath("$[1].sensorStatus").value("OFFLINE"));
     }
 
     @Test
-    @DisplayName("센서가 데이터를 보내면 ONLINE 상태로 변경")
-    void sensorGoesOnlineAfterActivity_viaStatusEndpoint() throws Exception {
-        // 1) 센서 데이터 전송
-        SensorDataRequest dataRequest = new SensorDataRequest();
-        dataRequest.setDataKey(SensorDataKey.TEMPERATURE);
-        dataRequest.setDataValue("25.5");
-        mockMvc.perform(post(BASE_URL + "/" + TEST_UID + "/data")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dataRequest)))
-                .andExpect(status().isOk());
-
-        // 2) 스케줄러 실행 (실제 운영에서는 주기 실행)
-        sensorStatusScheduler.updateSensorStatus();
-
-        // 3) 컨트롤러 상태 조회 API 로 ONLINE 확인
+    @DisplayName("단일 센서 상태 조회 API - 등록 직후 OFFLINE")
+    void getSensorStatus_initialOffline() throws Exception {
         mockMvc.perform(get(BASE_URL + "/" + TEST_UID + "/status"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.sensorStatus").value("ONLINE"));
+                .andExpect(jsonPath("$.sensorUid").value(TEST_UID))
+                .andExpect(jsonPath("$.sensorStatus").value("OFFLINE"))
+                .andExpect(jsonPath("$.lastUpdate").exists());
+    }
+
+    @Test
+    @DisplayName("단일 센서 상태 조회 API - 데이터 전송 후 ONLINE으로 변경")
+    void getSensorStatus_onlineAfterData() throws Exception {
+        // 1) 센서 데이터 전송
+        SensorDataRequest dataReq = new SensorDataRequest();
+        dataReq.setDataKey(SensorDataKey.TEMPERATURE);
+        dataReq.setDataValue("25.5");
+        mockMvc.perform(post(BASE_URL + "/" + TEST_UID + "/data")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dataReq)))
+                .andExpect(status().isOk());
+
+        // 2) 스케줄러 실행 (실제 운영 시 주기적으로 동작)
+        sensorStatusScheduler.updateSensorStatus();
+
+        // 3) 상태 조회
+        mockMvc.perform(get(BASE_URL + "/" + TEST_UID + "/status"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.sensorUid").value(TEST_UID))
+                .andExpect(jsonPath("$.sensorStatus").value("ONLINE"))
+                .andExpect(jsonPath("$.lastUpdate").exists());
     }
 }
