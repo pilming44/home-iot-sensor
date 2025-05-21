@@ -45,8 +45,13 @@ public class Sensor {
     @Column
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "sensor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "sensor", fetch = FetchType.LAZY,
+            cascade = {CascadeType.MERGE, CascadeType.REMOVE}, orphanRemoval = true)
     private List<SensorData> sensorData = new ArrayList<>();
+
+    @OneToOne(mappedBy = "sensor", fetch = FetchType.LAZY,
+            cascade = {CascadeType.MERGE, CascadeType.REMOVE}, orphanRemoval = true)
+    private SensorStatus sensorStatus;
 
     public void markAsDataTransmitted(LocalDateTime timestamp) {
         this.lastTransmissionTime = timestamp;
